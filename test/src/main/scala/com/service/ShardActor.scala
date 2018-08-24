@@ -19,7 +19,7 @@ case class ClusterMaster(system: ActorSystem) extends Actor {
 
   override def preStart(): Unit = {
     context.system.eventStream.subscribe(self, classOf[akka.actor.DeadLetter])
-    context.system.scheduler.scheduleOnce(30.second) {
+    context.system.scheduler.scheduleOnce(15.second) {
       shardActor ! ShardRegion.GetShardRegionState
     }(context.dispatcher)
 
@@ -29,7 +29,7 @@ case class ClusterMaster(system: ActorSystem) extends Actor {
     case msg: DeadLetter =>
     case CurrentShardRegionState(shards) =>
 
-      shards.foreach { p => logger.warn(s"CurrentShardRegionState size ${shards.size}") }
+      shards.foreach { p => logger.warn(s"CurrentShardRegionState size ${p.shardId} ${p.entityIds.size} ") }
     case e =>
 
       shardActor forward e
