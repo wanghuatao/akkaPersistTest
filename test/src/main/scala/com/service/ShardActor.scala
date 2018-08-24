@@ -63,7 +63,7 @@ case class ClusterMaster(system: ActorSystem) extends Actor {
 class ShardActor extends PersistentActor with AtLeastOnceDelivery {
   val logger = LoggerFactory.getLogger(this.getClass)
   private val entityId = self.path.name
-  private val timeout = 180.seconds
+  private val timeout = 3600.seconds
   var playerActor = context.actorOf(Props(PlayerActor()), "playerActor")
 
   override def preStart(): Unit = {

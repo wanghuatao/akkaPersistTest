@@ -70,7 +70,7 @@ case class PlayerActor() extends Actor with AtLeastOnceDelivery {
       handMsg(event, true)
 
     case RecoveryCompleted =>
-      logger.info(s"shard $entityId  RecoveryCompleted  lastSequenceNr $lastSequenceNr")
+      //logger.info(s"shard $entityId  RecoveryCompleted  lastSequenceNr $lastSequenceNr")
   }
 
 
