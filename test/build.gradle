@@ -1,18 +1,13 @@
+repositories {
+    mavenLocal()
+    maven {
 
-buildscript {
-    repositories {
-        mavenLocal()
-        maven {
-
-            url "http://maven.aliyun.com/nexus/content/groups/public"
-        }
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        url "http://maven.aliyun.com/nexus/content/groups/public"
     }
-
+    maven {
+        url "https://plugins.gradle.org/m2/"
+    }
 }
-
 
 group 'yuzhonglele'
 version '1.0-SNAPSHOT'
@@ -80,7 +75,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
 }
-
 
 //
 //repositories {
