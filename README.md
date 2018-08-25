@@ -2,9 +2,6 @@
 
 2. intellij idea import this gradle project
  
-3. 
-  docker run  --restart=always  --name cassandra -d -p 9042:9042 \
-  -e CASSANDRA_CLUSTER_NAME=tetCluster  \
-  -p 7000:7000 cassandra:3.11
+3. docker run  --restart=always  --name cassandra -d -p 9042:9042 -p 7000:7000 cassandra:3.11
 
   

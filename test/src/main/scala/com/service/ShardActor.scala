@@ -15,7 +15,7 @@ case class ClusterMaster(system: ActorSystem) extends Actor {
   val logger = LoggerFactory.getLogger(this.getClass)
   val cluster = Cluster(system)
   val shardActor = createShard
-  val numberOfShards = 10
+  val numberOfShards = 100
 
   override def preStart(): Unit = {
     context.system.eventStream.subscribe(self, classOf[akka.actor.DeadLetter])

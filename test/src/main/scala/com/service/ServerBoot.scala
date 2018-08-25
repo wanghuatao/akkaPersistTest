@@ -21,7 +21,7 @@ object ServerBoot extends App {
 
   val master = system.actorOf(Props(ClusterMaster(system)), "master")
 
-  (1 to 50000).foreach { f =>
+  (1 to 100000).foreach { f =>
     master ! EntityMsg(f.toString, TestMsg(f.toString))
   }
 
