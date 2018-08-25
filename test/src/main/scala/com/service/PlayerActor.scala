@@ -3,25 +3,30 @@ package com.service
 import akka.actor.Actor
 import akka.persistence.AtLeastOnceDelivery.UnconfirmedWarning
 import akka.persistence._
+import akka.stream.scaladsl.Sink
+import akka.util.Timeout
 import com.msg._
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.duration._
 
 case class PlayerActor() extends Actor with AtLeastOnceDelivery with SystemQuery {
+
+  import akka.pattern.ask
+
+  implicit val askTimeout = Timeout(5.seconds)
   val logger = LoggerFactory.getLogger(this.getClass)
   protected val entityId = self.path.name
   private var lastSnapNr = 0l
   var entityState = EntityState()
 
   override def preStart(): Unit = {
-       val events = queries.eventsByPersistenceId("player-" + entityId, 0, Long.MaxValue)
-        events.async.runForeach { evt =>
-          logger.info(s"event ${evt.event}")
-        }
-    //
-    //        events.runForeach { evt =>
-    //          logger.info(s"event ${evt.event}")
-    //        }
+    val events = queries.eventsByPersistenceId("player-" + entityId, 0, Long.MaxValue)
+
+    events.mapAsync(parallelism = 3)(elem => (self ? elem.event)).map { p =>
+      logger.info(s"event ${p}")
+      p
+    }.runWith(Sink.ignore)
   }
 
 
@@ -48,6 +53,10 @@ case class PlayerActor() extends Actor with AtLeastOnceDelivery with SystemQuery
         handMsg(event)
         //logger.info(s"player ${self.path.name} recv $testCmd")
       }
+
+
+    case event: TestEvent =>
+      logger.info(s"recv $event from ${sender()}")
     case any =>
       logger.error(s"not impl $any")
 

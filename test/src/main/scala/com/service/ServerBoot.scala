@@ -21,7 +21,8 @@ object ServerBoot extends App {
 
   val master = system.actorOf(Props(ClusterMaster(system)), "master")
 
-  (1 to 20000).foreach { f =>
+  (1 to 100000).foreach { f =>
+    Thread.sleep(1)
     master ! EntityMsg(f.toString, TestCmd(f.toString))
   }
 

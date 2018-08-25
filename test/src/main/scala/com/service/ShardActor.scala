@@ -64,7 +64,7 @@ case class ClusterMaster(system: ActorSystem) extends Actor {
 
     val serviceRegion: ActorRef = ClusterSharding(system).start(
       typeName = "ShardActor",
-      entityProps = Props[ShardActor],
+      entityProps = Props[ShardActor].withDispatcher("shard-dispatcher"),
       settings = ClusterShardingSettings(system),
       extractEntityId = extractEntityId,
       extractShardId = extractShardId)
@@ -79,7 +79,7 @@ class ShardActor extends Actor {
   val logger = LoggerFactory.getLogger(this.getClass)
   private val entityId = self.path.name
   private val timeout = 3600.seconds
-  var playerActor = context.actorOf(Props(PlayerActor()), entityId)
+  var playerActor = context.actorOf(Props(PlayerActor()).withDispatcher("player-dispatcher"), entityId)
 
   override def preStart(): Unit = {
     context.setReceiveTimeout(timeout)
