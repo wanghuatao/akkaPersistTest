@@ -1,4 +1,4 @@
-1.git clone https://github.com/wanghuatao/akkaPersistTest.git
+1. git clone https://github.com/wanghuatao/akkaPersistTest.git
 
 2. intellij idea import this gradle project
  
