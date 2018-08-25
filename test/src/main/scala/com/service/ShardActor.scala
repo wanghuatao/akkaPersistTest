@@ -5,11 +5,25 @@ import akka.actor.{Actor, ActorRef, ActorSystem, DeadLetter, Props, ReceiveTimeo
 import akka.cluster.Cluster
 import akka.cluster.sharding.ShardRegion.{CurrentShardRegionState, ExtractEntityId, ExtractShardId, Passivate}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
-import akka.persistence._
+import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
+import akka.persistence.query.PersistenceQuery
+import akka.stream.ActorMaterializer
 import com.msg._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
+
+object SystemQuery {
+  private val system = ServerBoot.system
+  private implicit val mat = ActorMaterializer()(system)
+  val queries = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
+}
+
+trait SystemQuery {
+  val queries = SystemQuery.queries
+  implicit val mat = SystemQuery.mat
+}
+
 
 case class ClusterMaster(system: ActorSystem) extends Actor {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -22,6 +36,7 @@ case class ClusterMaster(system: ActorSystem) extends Actor {
     context.system.scheduler.scheduleOnce(15.second) {
       shardActor ! ShardRegion.GetShardRegionState
     }(context.dispatcher)
+
 
   }
 
@@ -60,11 +75,11 @@ case class ClusterMaster(system: ActorSystem) extends Actor {
 }
 
 
-class ShardActor extends PersistentActor with AtLeastOnceDelivery {
+class ShardActor extends Actor {
   val logger = LoggerFactory.getLogger(this.getClass)
   private val entityId = self.path.name
   private val timeout = 3600.seconds
-  var playerActor = context.actorOf(Props(PlayerActor()), "playerActor")
+  var playerActor = context.actorOf(Props(PlayerActor()), entityId)
 
   override def preStart(): Unit = {
     context.setReceiveTimeout(timeout)
@@ -72,7 +87,7 @@ class ShardActor extends PersistentActor with AtLeastOnceDelivery {
   }
 
 
-  override def receiveCommand = {
+  override def receive = {
     case ReceiveTimeout =>
       context.parent ! Passivate(stopMessage = Stop)
 
@@ -83,17 +98,11 @@ class ShardActor extends PersistentActor with AtLeastOnceDelivery {
       msg.entity match {
 
         case m: Msg =>
+          //logger.info(s"msg $msg ${playerActor} $entityId")
           playerActor forward m
 
       }
   }
 
-  override def receiveRecover: Receive = {
-    case _ =>
-
-  }
-
-
-  override def persistenceId: String = s"ShardActor_$entityId"
 }
 

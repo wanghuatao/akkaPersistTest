@@ -3,15 +3,27 @@ package com.service
 import akka.actor.Actor
 import akka.persistence.AtLeastOnceDelivery.UnconfirmedWarning
 import akka.persistence._
-import com.msg.{SaveSnapshot, TestCmd, TestEvent, TestMsg}
+import com.msg._
 import org.slf4j.LoggerFactory
 
 
-case class PlayerActor() extends Actor with AtLeastOnceDelivery {
+case class PlayerActor() extends Actor with AtLeastOnceDelivery with SystemQuery {
   val logger = LoggerFactory.getLogger(this.getClass)
   protected val entityId = self.path.name
   private var lastSnapNr = 0l
   var entityState = EntityState()
+
+  override def preStart(): Unit = {
+       val events = queries.eventsByPersistenceId("player-" + entityId, 0, Long.MaxValue)
+        events.async.runForeach { evt =>
+          logger.info(s"event ${evt.event}")
+        }
+    //
+    //        events.runForeach { evt =>
+    //          logger.info(s"event ${evt.event}")
+    //        }
+  }
+
 
   override def receiveCommand: Receive = {
 
@@ -29,11 +41,15 @@ case class PlayerActor() extends Actor with AtLeastOnceDelivery {
       logger.info(s"SaveSnapshotSuccess $metadata")
     case DeleteSnapshotSuccess(metadata) =>
 
+    case msg: EntityMsg =>
+
     case testCmd: TestCmd =>
       persist(TestEvent(testCmd.id)) { event =>
         handMsg(event)
-        logger.info(s"player ${self.path.name} recv $testCmd")
+        //logger.info(s"player ${self.path.name} recv $testCmd")
       }
+    case any =>
+      logger.error(s"not impl $any")
 
   }
 
@@ -70,7 +86,7 @@ case class PlayerActor() extends Actor with AtLeastOnceDelivery {
       handMsg(event, true)
 
     case RecoveryCompleted =>
-      //logger.info(s"shard $entityId  RecoveryCompleted  lastSequenceNr $lastSequenceNr")
+    //logger.info(s"shard $entityId  RecoveryCompleted  lastSequenceNr $lastSequenceNr")
   }
 
 
