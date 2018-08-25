@@ -23,10 +23,7 @@ case class PlayerActor() extends Actor with AtLeastOnceDelivery with SystemQuery
   override def preStart(): Unit = {
     val events = queries.eventsByPersistenceId("player-" + entityId, 0, Long.MaxValue)
 
-    events.mapAsync(parallelism = 3)(elem => (self ? elem.event)).map { p =>
-      logger.info(s"event ${p}")
-      p
-    }.runWith(Sink.ignore)
+    events.mapAsync(parallelism = 6)(elem => self ? elem.event).runWith(Sink.ignore)
   }
 
 
